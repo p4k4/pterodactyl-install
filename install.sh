@@ -1,50 +1,39 @@
-#!/bin/bash
-#Can be grabbed from
-#wget https://bit.ly/2X6sZVU && bash 2X6sZVU
-echo 'Enter your FQDN panel.example.com'
-read fqdn
-apt update
-apt upgrade -y 
-apt install curl vim -y
-#curl https://raw.githubusercontent.com/MrFlacko/Scripts/master/UbuntuMirrors18.04 > /etc/apt/sources.list
-bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-panel.sh)
-bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-daemon.sh)
-apt update
-apt upgrade -y
-apt install certbot
-echo 'Certbot running'
-echo 'Select create temporary website to configure'
-ufw allow 443
-ufw allow 80
-ufw allow 22
-ufw allow 2022
-ufw allow 8080
-ufw allow 25565
-echo y | ufw delete 7
-echo y | ufw delete 7
-echo y | ufw delete 7
-echo y | ufw delete 7
-echo y | ufw delete 7
-echo y | ufw delete 7
-ufw enable
-certbot certonly -d $fqdn
-systemctl restart nginx
-echo done
-echo cd /srv/daemon, copy core.json from the website to the config folder when creating the node
-echo then do npm start
-#echo 'Press Enter to do final setup'
-#read tmp
-#clear
-#echo 'Please set sftp enabled to false'
-#echo 'refer to this site if you don't know to set the enabled flag to false'
-#echo 'https://pterodactyl.io/daemon/standalone_sftp.html#run-the-standalone-server'
-#echo
-#echo 'Press enter when ready'
-#read 
-#nano /srv/daemon/config/core.json
-#cd /srv/daemon
-#curl -Lo sftp-server https://github.com/pterodactyl/sftp-server/releases/download/v1.0.4/sftp-server
-#chmod +x sftp-server
-#./sftp-server
-#curl https://raw.githubusercontent.com/MrFlacko/Scripts/master/PterodactylStandaloneSFTP > /etc/systemd/system/pterosftp.service
-#systemctl enable --now pterosftp
+# Add "add-apt-repository" command
+apt -y install software-properties-common curl &&
+
+# Add additional repositories for PHP, Redis, and MariaDB
+LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php &&
+add-apt-repository -y ppa:chris-lea/redis-server &&
+curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash &&
+
+# Update repositories list
+apt update &&
+
+# Add universe repository if you are on Ubuntu 18.04
+apt-add-repository universe &&
+
+# Install Dependencies
+apt -y install php7.2 php7.2-cli php7.2-gd php7.2-mysql php7.2-pdo php7.2-mbstring php7.2-tokenizer php7.2-bcmath php7.2-xml php7.2-fpm php7.2-curl php7.2-zip mariadb-server nginx tar unzip git redis-server &&
+
+# Install Composer
+curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer &&
+
+# Make panel dir
+mkdir -p /var/www/pterodactyl
+cd /var/www/pterodactyl
+
+# Download Pterodactyl and set perms
+
+curl -Lo panel.tar.gz https://github.com/pterodactyl/panel/releases/download/v0.7.16/panel.tar.gz &&
+tar --strip-components=1 -xzvf panel.tar.gz &&
+chmod -R 755 storage/* bootstrap/cache/ &&
+
+# MySQL
+
+mysql -u root -p &&
+USE mysql; &&
+echo "\run - CREATE USER '\pterodactyl'@'127.0.0.1' IDENTIFIED BY '\enterpasswordhere';" &&
+echo "\run - CREATE DATABASE panel;" &&
+
+
+
